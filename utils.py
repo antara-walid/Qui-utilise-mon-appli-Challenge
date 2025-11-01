@@ -61,12 +61,16 @@ def read_csv_file(file_path: str, has_header: bool = True) -> List[List[str]]:
         return [header] + data
     return rows
 
-def write_csv_file(rows: List[List[str]], file_path: str) -> None:
-    with open(file_path, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerows(rows)
 
 class CSVDataProcessor:
+    """
+    Utility class designed to process training and testing CSV files containing user session data.
+
+    Example:
+        >>> with CSVDataProcessor("train.csv") as processor:
+        >>>     train_dataframe = processor.get_processed_train_data()
+        >>>     test_dataframe = processor.get_processed_test_data(test_data_csv_path="test.csv")
+    """
     def __init__(self, train_data_csv_path):
         self.train_data_csv_path = train_data_csv_path
         self.data = None
@@ -86,12 +90,22 @@ class CSVDataProcessor:
         pass
 
     def _initialise(self):
+        """
+        Reads the train CSV file and creates the headers
+        """
         train_data = read_csv_file(self.train_data_csv_path)
         self.is_training_data = True
         self.data = train_data
         self.headers = self.create_headers()
 
     def extract_all_possible_features(self):
+        """
+        Extracts the following features:
+        - All unique actions
+        - All screens
+        - All configurations
+        - All chaines
+        """
         index = 1
         if self.is_training_data:
             index = 2
@@ -108,7 +122,10 @@ class CSVDataProcessor:
                 if chaine is not None:
                     self.possible_chaines_set.add(chaine)
 
-    def create_headers(self):
+    def create_headers(self) -> list:
+        """
+        Creates and returns the csv or dataset headers using the extracted features
+        """
         initial_columns = ["navigator", "total_actions", "session_duration", "avg_speed"]
         if self.is_training_data:
             initial_columns.insert(0, "user")
@@ -133,6 +150,18 @@ class CSVDataProcessor:
         return initial_columns + possible_actions_str + possible_screens_str + possible_configurations_str + possible_chaine_str
 
     def extract_data_from_row(self, row) -> list:
+        """
+        Extracts, computes and returns the following data from each row:
+        - user (in the case of train.csv)
+        - Navigator
+        - Total number of actions in each session
+        - Session duration
+        - Average speed during the session
+        - occurrences of each unique action
+        - occurrences of each screen
+        - occurrences of each configuration
+        - occurrences of each chaine
+        """
         result_row = []
 
         if self.is_training_data:
@@ -186,6 +215,9 @@ class CSVDataProcessor:
         return result_row
 
     def process_data(self, data=None, is_training_data = True):
+        """
+        Entry point for processing train or test csv data
+        """
         headers = self.headers
         if not is_training_data :
             assert data is not None, "Data can not be None when processing test csv file"
@@ -198,6 +230,9 @@ class CSVDataProcessor:
         return pd.DataFrame(data= processed_csv_data, columns=headers)
 
     def get_processed_train_data(self):
+        """
+        returns the processed train data
+        """
         if self.data is None or self.headers is None:
             # method was not called inside context manager
             # should initialise before processing
@@ -206,6 +241,9 @@ class CSVDataProcessor:
         return self.process_data(is_training_data=True)
 
     def get_processed_test_data(self, test_data_csv_path):
+        """
+        returns the processed test data
+        """
         if self.headers is None:
             self._initialise()
 
