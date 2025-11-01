@@ -28,7 +28,7 @@ cd Qui-utilise-mon-appli-Challenge
 
 ### 2. Créer un environnement virtuel
 
-#### Option A : Avec venv
+#### Avec venv
 
 ```bash
 # Windows
@@ -51,5 +51,6 @@ pip install -r requirements.txt
 ```bash
 jupyter notebook
 ```
+
 
 
