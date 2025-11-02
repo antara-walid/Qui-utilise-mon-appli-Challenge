@@ -126,7 +126,7 @@ class CSVDataProcessor:
         """
         Creates and returns the csv or dataset headers using the extracted features
         """
-        initial_columns = ["navigator", "total_actions", "session_duration", "avg_speed"]
+        initial_columns = ["navigator", "total_actions", "session_duration", "avg_speed", "uses_french"]
         if self.is_training_data:
             initial_columns.insert(0, "user")
             self.extract_all_possible_features()
@@ -188,6 +188,8 @@ class CSVDataProcessor:
         avg_speed = total_actions/int(session_duration) if int(session_duration) > 0 else 0
         result_row.append(avg_speed) # 4. add average speed
 
+        uses_fr = 0
+
         # calculate the nbr of occurrences of all action related features
         possible_actions_occurrences = {}
         screens_occurrences = {}
@@ -199,14 +201,18 @@ class CSVDataProcessor:
             if trimmed_action is not None:
                 possible_actions_occurrences[trimmed_action] = possible_actions_occurrences.get(trimmed_action, 0) +1
             if screen is not None:
+                if screen.startswith("fr"):
+                    uses_fr = 1
                 screens_occurrences[screen] = screens_occurrences.get(screen, 0) +1
             if configuration is not None:
                 configurations_occurrences[configuration] = configurations_occurrences.get(configuration, 0) + 1
             if chaine is not None:
                 chaines_occurrences[chaine] = chaines_occurrences.get(chaine, 0) + 1
 
+        # 5. Add if the user uses french
+        result_row.append(uses_fr)
 
-        # 4. add occurrences those occurrences to result row (warning the order is important)
+        # 6. add occurrences those occurrences to result row (warning the order is important)
         result_row.extend([possible_actions_occurrences.get(possible_action, 0) for possible_action in self.possible_actions_set ])
         result_row.extend([screens_occurrences.get(screen, 0) for screen in self.possible_screens_set ])
         result_row.extend([configurations_occurrences.get(config, 0) for config in self.possible_configurations_set ])
